@@ -219,6 +219,11 @@ namespace Aikido.Zen.Core.Helpers
                 }
             }
 
+            // SK result has a non-public Value property
+            var prop = type.GetProperty("Value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (prop != null && prop.GetIndexParameters().Length == 0)
+                dictionary["Value"] = prop.GetValue(obj);
+
             return dictionary;
         }
 

@@ -24,6 +24,48 @@ namespace Aikido.Zen.DotNetCore.Patches
             // Rystem.OpenAi
             PatchMethod(harmony, "Rystem.OpenAi", "Rystem.OpenAi.Chat.OpenAiChat", "ExecuteAsync", "System.Threading.CancellationToken");
             PatchMethod(harmony, "Rystem.OpenAi", "Rystem.OpenAi.Chat.OpenAiChat", "ExecuteAsStreamAsync", "System.Boolean", "System.Threading.CancellationToken");
+
+            // Semantic Kernel: InvokePromptAsync
+            // Dumped via DumpSkInvokePromptPatchLines()
+            PatchMethod(harmony, "Microsoft.SemanticKernel.Core", "Microsoft.SemanticKernel.KernelExtensions", "InvokePromptAsync", "Microsoft.SemanticKernel.Kernel", "System.String", "Microsoft.SemanticKernel.KernelArguments", "System.String", "Microsoft.SemanticKernel.IPromptTemplateFactory", "Microsoft.SemanticKernel.PromptTemplateConfig", "System.Threading.CancellationToken");
+            PatchMethod(harmony, "Microsoft.SemanticKernel.Core", "Microsoft.SemanticKernel.KernelExtensions", "InvokePromptAsync", "Microsoft.SemanticKernel.Kernel", "System.Text.Json.JsonSerializerOptions", "System.String", "Microsoft.SemanticKernel.KernelArguments", "System.String", "Microsoft.SemanticKernel.IPromptTemplateFactory", "Microsoft.SemanticKernel.PromptTemplateConfig", "System.Threading.CancellationToken");
+            PatchMethod(harmony, "Microsoft.SemanticKernel.Core", "Microsoft.SemanticKernel.KernelExtensions", "InvokePromptAsync", "Microsoft.SemanticKernel.Kernel", "System.String", "Microsoft.SemanticKernel.KernelArguments", "System.String", "Microsoft.SemanticKernel.IPromptTemplateFactory", "Microsoft.SemanticKernel.PromptTemplateConfig", "System.Threading.CancellationToken");
+            PatchMethod(harmony, "Microsoft.SemanticKernel.Core", "Microsoft.SemanticKernel.KernelExtensions", "InvokePromptAsync", "Microsoft.SemanticKernel.Kernel", "System.Text.Json.JsonSerializerOptions", "System.String", "Microsoft.SemanticKernel.KernelArguments", "System.String", "Microsoft.SemanticKernel.IPromptTemplateFactory", "Microsoft.SemanticKernel.PromptTemplateConfig", "System.Threading.CancellationToken");
+            PatchMethod(harmony, "Microsoft.SemanticKernel.Core", "Microsoft.SemanticKernel.KernelExtensions", "InvokePromptAsync", "Microsoft.SemanticKernel.Kernel", "System.String", "Microsoft.SemanticKernel.KernelArguments", "System.String", "Microsoft.SemanticKernel.IPromptTemplateFactory", "Microsoft.SemanticKernel.PromptTemplateConfig");
+        }
+
+        static void DumpSkInvokePromptPatchLines()
+        {
+            // Try Core first, then fallback (covers different SK package layouts)
+            var type =
+                Type.GetType("Microsoft.SemanticKernel.KernelExtensions, Microsoft.SemanticKernel.Core", throwOnError: false)
+                ?? Type.GetType("Microsoft.SemanticKernel.KernelExtensions, Microsoft.SemanticKernel", throwOnError: false);
+
+            if (type == null)
+            {
+                Console.WriteLine("// KernelExtensions type not found in SK assemblies.");
+                return;
+            }
+
+            var asmName = type.Assembly.GetName().Name; // e.g., "Microsoft.SemanticKernel.Core"
+            var methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+                              .Where(m => m.Name == "InvokePromptAsync")
+                              .ToArray();
+
+            if (methods.Length == 0)
+            {
+                Console.WriteLine("// No InvokePromptAsync overloads found.");
+                return;
+            }
+
+            Console.WriteLine($"// Found {methods.Length} InvokePromptAsync overload(s) in {asmName}");
+            foreach (var m in methods)
+            {
+                var pars = m.GetParameters().Select(p => p.ParameterType.FullName!).ToArray();
+                var quoted = pars.Select(s => $"\"{s}\"");
+                var line = $"PatchMethod(harmony, \"{asmName}\", \"{type.FullName}\", \"{m.Name}\", {string.Join(", ", quoted)});";
+                Console.WriteLine(line);
+            }
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -129,6 +130,16 @@ namespace Aikido.Zen.Core.Patches
                     model = modelAsObject.ToString();
                     return true;
                 }
+                // SK
+                if (resultAsDictionary.TryGetValue("Value", out object valueAsObject) && valueAsObject != null)
+                {
+                    var valueAsDictionary = ReflectionHelper.ConvertObjectToDictionary(valueAsObject);
+                    if (valueAsDictionary.TryGetValue("ModelId", out object modelIdAsObject) && modelIdAsObject != null)
+                    {
+                        model = modelIdAsObject.ToString();
+                        return true;
+                    }
+                }
                 return false;
             }
             catch
@@ -186,6 +197,30 @@ namespace Aikido.Zen.Core.Patches
                     return iTokensFound && oTokensFound;
                 }
 
+                // SK
+                if (resultAsDictionary.TryGetValue("Metadata", out object metadata))
+                {
+                    var iTokensFound = false;
+                    var oTokensFound = false;
+                    var metadataAsDictionary = ReflectionHelper.ConvertObjectToDictionary(metadata);
+                    long? inputTokens = null;
+                    long? outputTokens = null;
+
+                    if (metadataAsDictionary.TryGetValue("PromptTokenCount", out var input))
+                    {
+                        inputTokens = Convert.ToInt64(input);
+                        iTokensFound = true;
+                    }
+
+                    if (metadataAsDictionary.TryGetValue("CandidatesTokenCount", out var output))
+                    {
+                        outputTokens = Convert.ToInt64(output);
+                        oTokensFound = true;
+                    }
+
+                    tokens = (inputTokens ?? 0, outputTokens ?? 0);
+                    return iTokensFound && oTokensFound;
+                }
             }
             catch
             {

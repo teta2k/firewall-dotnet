@@ -33,7 +33,7 @@ namespace Aikido.Zen.Core.Helpers
                     resolvedResult = resultProperty?.GetValue(result);
                 }
                 // Handle Task<T>
-                else if (typeName.StartsWith("Task`") && resultType.IsGenericType)
+                else if ((typeName.StartsWith("Task`") || typeName.StartsWith("AsyncStateMachineBox`")) && resultType.IsGenericType)
                 {
                     var resultProperty = resultType.GetProperty("Result");
                     resolvedResult = resultProperty?.GetValue(result);
