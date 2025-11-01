@@ -4,4 +4,4 @@
 
 3. Pausing execution in `OnLLMCallCompleted` inside `LLMPatcher.cs` shows the model and number of input and output tokens
 
-![Submission](submission.png)
+![Submission](SUBMISSION.png)
